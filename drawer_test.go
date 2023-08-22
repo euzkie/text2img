@@ -7,7 +7,7 @@ import (
 )
 
 func TestDraw(t *testing.T) {
-	path := "fonts/mplus-1c-bold.ttf"
+	path := "fonts/MPLUS1Code-Bold.ttf"
 	d, err := NewDrawer(Params{
 		FontPath: path,
 	})

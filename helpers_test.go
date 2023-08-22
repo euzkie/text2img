@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestHex(t *testing.T) {
-	c, err := Hex("#f00")
+func TestHexToColor(t *testing.T) {
+	c, err := hexToColor("#f00")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -13,7 +13,7 @@ func TestHex(t *testing.T) {
 		t.Errorf("R must be 255, got %#v", uint8(c.R))
 	}
 
-	c, err = Hex("#00ff08")
+	c, err = hexToColor("#00ff08")
 	if err != nil {
 		t.Error(err.Error())
 	}
