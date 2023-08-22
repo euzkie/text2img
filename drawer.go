@@ -13,33 +13,45 @@ import (
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
 )
 
-// Drawer is the main interface for this package
+type drawer struct {
+	BgImg             image.Image
+	BgColor           *image.Uniform
+	TextColor         *image.Uniform
+	TextPosVertical   int
+	TextPosHorizontal int
+	Width             int // ImgWidth
+	Height            int // ImgHeight
+	Font              *truetype.Font
+	FontSize          float64
+	autoFontSize      bool // Remove this option: font size will always be automatic.
+}
+
+// Drawer is the main interface for this package.
 type Drawer interface {
 	Draw(string) (*image.RGBA, error)
 	SetColors(color.RGBA, color.RGBA)
+	SetTextPos(int, int)
 	SetFontPath(string) error
 	SetFontSize(float64)
-	SetTextPos(int, int)
 	SetSize(int, int)
 }
 
-// Params is parameters for NewDrawer function
+// Params holds the configuration for Drawer.
 type Params struct {
-	Width               int
-	Height              int
-	FontPath            string
-	BackgroundImagePath string
-	FontSize            float64
-	BackgroundColor     color.RGBA
-	TextColor           color.RGBA
-	TextPosVertical     int
-	TextPosHorizontal   int
+	BgImgPath         string
+	BgColor           color.RGBA
+	TextColor         color.RGBA
+	TextPosVertical   int
+	TextPosHorizontal int
+	Width             int
+	Height            int
+	FontPath          string
+	FontSize          float64
 }
 
-// NewDrawer returns Drawer interface
+// NewDrawer is a builder for Drawer.
 func NewDrawer(params Params) (Drawer, error) {
 	d := &drawer{}
 	if params.FontPath != "" {
@@ -48,45 +60,31 @@ func NewDrawer(params Params) (Drawer, error) {
 			return d, err
 		}
 	}
-	if params.BackgroundImagePath != "" {
-		err := d.SetBackgroundImage(params.BackgroundImagePath)
+	if params.BgImgPath != "" {
+		err := d.SetBgImg(params.BgImgPath)
 		if err != nil {
 			return d, err
 		}
-		d.SetSize(d.BackgroundImage.Bounds().Size().X, d.BackgroundImage.Bounds().Size().Y)
+		d.SetSize(d.BgImg.Bounds().Size().X, d.BgImg.Bounds().Size().Y)
 	} else {
 		d.SetSize(params.Width, params.Height)
 	}
 
-	d.SetColors(params.TextColor, params.BackgroundColor)
+	d.SetColors(params.TextColor, params.BgColor)
 	d.SetFontSize(params.FontSize)
 
 	return d, nil
 }
 
-type drawer struct {
-	BackgroundColor   *image.Uniform
-	BackgroundImage   image.Image
-	Font              *truetype.Font
-	FontSize          float64
-	Height            int
-	TextColor         *image.Uniform
-	TextPosVertical   int
-	TextPosHorizontal int
-	Width             int
-
-	autoFontSize bool
-}
-
-// Draw returns the image of a text
+// Draw draws the text on the image.
 func (d *drawer) Draw(text string) (img *image.RGBA, err error) {
-	if d.BackgroundImage != nil {
-		imgRect := image.Rectangle{image.Pt(0, 0), d.BackgroundImage.Bounds().Size()}
+	if d.BgImg != nil {
+		imgRect := image.Rectangle{image.Pt(0, 0), d.BgImg.Bounds().Size()}
 		img = image.NewRGBA(imgRect)
-		draw.Draw(img, img.Bounds(), d.BackgroundImage, image.ZP, draw.Src)
+		draw.Draw(img, img.Bounds(), d.BgImg, image.ZP, draw.Src)
 	} else {
 		img = image.NewRGBA(image.Rect(0, 0, d.Width, d.Height))
-		draw.Draw(img, img.Bounds(), d.BackgroundColor, image.ZP, draw.Src)
+		draw.Draw(img, img.Bounds(), d.BgColor, image.ZP, draw.Src)
 	}
 	if d.autoFontSize {
 		d.FontSize = d.calcFontSize(text)
@@ -120,8 +118,8 @@ func (d *drawer) Draw(text string) (img *image.RGBA, err error) {
 	return
 }
 
-// SetBackgroundImage sets the specific background image
-func (d *drawer) SetBackgroundImage(imagePath string) (err error) {
+// SetBgImg sets the specific background image
+func (d *drawer) SetBgImg(imagePath string) (err error) {
 	src, err := os.Open(imagePath)
 	if err != nil {
 		return
@@ -132,25 +130,25 @@ func (d *drawer) SetBackgroundImage(imagePath string) (err error) {
 	if err != nil {
 		return
 	}
-	d.BackgroundImage = img
+	d.BgImg = img
 	return
 }
 
-// SetColors sets the textColor and the backgroundColor
-func (d *drawer) SetColors(textColor, backgroundColor color.RGBA) {
-	r1, g1, b1, a1 := backgroundColor.RGBA()
+// SetColors sets the backgroundColor and the textColor.
+func (d *drawer) SetColors(textColor, bgColor color.RGBA) {
+	r1, g1, b1, a1 := bgColor.RGBA()
 	r2, g2, b2, a2 := textColor.RGBA()
 	if r1 == r2 && g1 == g2 && b1 == b2 && a1 == a2 {
 		color := PickColor()
-		d.TextColor = image.NewUniform(color.TextColor)
-		d.BackgroundColor = image.NewUniform(color.BackgroundColor)
+		d.TextColor = image.NewUniform(color.FgColor)
+		d.BgColor = image.NewUniform(color.BgColor)
 		return
 	}
 	d.TextColor = image.NewUniform(textColor)
-	d.BackgroundColor = image.NewUniform(backgroundColor)
+	d.BgColor = image.NewUniform(bgColor)
 }
 
-// SetColors sets the font
+// SetFontPath sets the path to the font.
 func (d *drawer) SetFontPath(fontPath string) (err error) {
 	fontBytes, err := ioutil.ReadFile(fontPath)
 	if err != nil {
@@ -164,7 +162,7 @@ func (d *drawer) SetFontPath(fontPath string) (err error) {
 	return
 }
 
-// SetColors sets the fontSize
+// SetFontSize sets the size of the font.
 func (d *drawer) SetFontSize(fontSize float64) {
 	if fontSize > 0 {
 		d.autoFontSize = false
@@ -174,13 +172,13 @@ func (d *drawer) SetFontSize(fontSize float64) {
 	d.autoFontSize = true
 }
 
-// SetFontPos sets the fontPos
+// SetTextPos sets the position of the text.
 func (d *drawer) SetTextPos(textPosVertical, textPosHorizontal int) {
 	d.TextPosVertical = textPosVertical
 	d.TextPosHorizontal = textPosHorizontal
 }
 
-// SetColors sets the size
+// SetSize sets the size. TODO take width and height from flags.
 func (d *drawer) SetSize(width, height int) {
 	if width <= 0 {
 		d.Width = 1200
