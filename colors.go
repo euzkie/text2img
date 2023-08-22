@@ -3,85 +3,89 @@ package text2img
 import (
 	"image/color"
 	"math/rand"
-	"time"
 )
 
 // Color contains a good conbination of backgroundColor and textColor
 type Color struct {
-	BackgroundColor color.RGBA
-	TextColor       color.RGBA
+	BgColor color.RGBA
+	FgColor color.RGBA
 }
 
-var colors []Color
+type palette struct {
+	BgColor string
+	FgColor string
+}
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-	g333 := must(Hex("#333"))
-	fff := must(Hex("#fff"))
-	colors = []Color{
-		Color{must(Hex("#003d47")), fff},
-		Color{must(Hex("#128277")), fff},
-		Color{must(Hex("#d24136")), fff},
-		Color{must(Hex("#eb8a3e")), fff},
-		Color{must(Hex("#ebb582")), fff},
-		Color{must(Hex("#785a46")), fff},
-		Color{must(Hex("#bc6d4f")), fff},
-		Color{must(Hex("#1e1f26")), fff},
-		Color{must(Hex("#283655")), fff},
-		Color{must(Hex("#4d648d")), fff},
-		Color{must(Hex("#265c00")), fff},
-		Color{must(Hex("#faaf08")), fff},
-		Color{must(Hex("#fa812f")), fff},
-		Color{must(Hex("#fa4032")), fff},
-		Color{must(Hex("#6c5f5b")), fff},
-		Color{must(Hex("#cdab81")), fff},
-		Color{must(Hex("#4f4a45")), fff},
-		Color{must(Hex("#04202c")), fff},
-		Color{must(Hex("#304040")), fff},
-		Color{must(Hex("#5b7065")), fff},
-		Color{must(Hex("#1e0000")), fff},
-		Color{must(Hex("#500805")), fff},
-		Color{must(Hex("#9d331f")), fff},
-		Color{must(Hex("#68a225")), fff},
-		Color{must(Hex("#fdffff")), g333},
-		Color{must(Hex("#2c4a52")), fff},
-		Color{must(Hex("#537072")), fff},
-		Color{must(Hex("#8e9b97")), fff},
-		Color{must(Hex("#f4ebdb")), g333},
-		Color{must(Hex("#d8412f")), fff},
-		Color{must(Hex("#fe7a47")), fff},
-		Color{must(Hex("#fcfdfe")), g333},
-		Color{must(Hex("#867666")), fff},
-		Color{must(Hex("#e1b80d")), fff},
-		Color{must(Hex("#003b46")), fff},
-		Color{must(Hex("#07575b")), fff},
-		Color{must(Hex("#66a5ad")), fff},
-		Color{must(Hex("#af6c59")), fff},
-		Color{must(Hex("#e68f71")), fff},
-		Color{must(Hex("#021c1e")), fff},
-		Color{must(Hex("#004445")), fff},
-		Color{must(Hex("#2c7873")), fff},
-		Color{must(Hex("#6fb98f")), fff},
-		Color{must(Hex("#434343")), fff},
-		Color{must(Hex("#767676")), fff},
-		Color{must(Hex("#c16707")), fff},
-		Color{must(Hex("#f08d16")), fff},
-		Color{must(Hex("#77262a")), fff},
-		Color{must(Hex("#9e2d29")), fff},
-		Color{must(Hex("#c35d44")), fff},
-		Color{must(Hex("#202d35")), fff},
-		Color{must(Hex("#0e3c54")), fff},
-		Color{must(Hex("#2a677c")), fff},
-		Color{must(Hex("#4f3538")), fff},
-		Color{must(Hex("#66443b")), fff},
-		Color{must(Hex("#c29f83")), fff},
-		Color{must(Hex("#210e3b")), fff},
-		Color{must(Hex("#4b194c")), fff},
-		Color{must(Hex("#872b76")), fff},
-	}
+var palettes = []palette{
+	{"#003d47", "#fff"},
+	{"#128277", "#fff"},
+	{"#d24136", "#fff"},
+	{"#eb8a3e", "#fff"},
+	{"#ebb582", "#fff"},
+	{"#785a46", "#fff"},
+	{"#bc6d4f", "#fff"},
+	{"#1e1f26", "#fff"},
+	{"#283655", "#fff"},
+	{"#4d648d", "#fff"},
+	{"#265c00", "#fff"},
+	{"#faaf08", "#fff"},
+	{"#fa812f", "#fff"},
+	{"#fa4032", "#fff"},
+	{"#6c5f5b", "#fff"},
+	{"#cdab81", "#fff"},
+	{"#4f4a45", "#fff"},
+	{"#04202c", "#fff"},
+	{"#304040", "#fff"},
+	{"#5b7065", "#fff"},
+	{"#1e0000", "#fff"},
+	{"#500805", "#fff"},
+	{"#9d331f", "#fff"},
+	{"#68a225", "#fff"},
+	{"#2c4a52", "#fff"},
+	{"#537072", "#fff"},
+	{"#8e9b97", "#fff"},
+	{"#d8412f", "#fff"},
+	{"#fe7a47", "#fff"},
+	{"#867666", "#fff"},
+	{"#e1b80d", "#fff"},
+	{"#003b46", "#fff"},
+	{"#07575b", "#fff"},
+	{"#66a5ad", "#fff"},
+	{"#af6c59", "#fff"},
+	{"#e68f71", "#fff"},
+	{"#021c1e", "#fff"},
+	{"#004445", "#fff"},
+	{"#2c7873", "#fff"},
+	{"#6fb98f", "#fff"},
+	{"#434343", "#fff"},
+	{"#767676", "#fff"},
+	{"#c16707", "#fff"},
+	{"#f08d16", "#fff"},
+	{"#77262a", "#fff"},
+	{"#9e2d29", "#fff"},
+	{"#c35d44", "#fff"},
+	{"#202d35", "#fff"},
+	{"#0e3c54", "#fff"},
+	{"#2a677c", "#fff"},
+	{"#4f3538", "#fff"},
+	{"#66443b", "#fff"},
+	{"#c29f83", "#fff"},
+	{"#210e3b", "#fff"},
+	{"#4b194c", "#fff"},
+	{"#872b76", "#fff"},
+	{"#fdffff", "#333"},
+	{"#fcfdfe", "#333"},
+	{"#f4ebdb", "#333"},
 }
 
 // PickColor picks a color
 func PickColor() Color {
-	return colors[rand.Intn(len(colors))]
+	n := rand.Intn(len(palettes) + 1)
+	bgStr, fgStr := palettes[n].BgColor, palettes[n].FgColor
+
+	// FIXME manage error
+	bg, _ := hexToColor(bgStr)
+	fg, _ := hexToColor(fgStr)
+
+	return Color{BgColor: bg, FgColor: fg}
 }
