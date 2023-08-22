@@ -191,34 +191,3 @@ func (d *drawer) SetSize(width, height int) {
 		d.Height = height
 	}
 }
-
-func (d *drawer) calcFontSize(text string) (fontSize float64) {
-	const padding = 4
-	fontSizes := []float64{128, 64, 48, 32, 24, 18, 16, 14, 12}
-	for _, fontSize = range fontSizes {
-		textWidth := d.calcTextWidth(fontSize, text)
-		if textWidth < d.Width {
-			return
-		}
-	}
-	return
-}
-
-func (d *drawer) calcTextWidth(fontSize float64, text string) (textWidth int) {
-	var face font.Face
-	if d.Font != nil {
-		opts := truetype.Options{}
-		opts.Size = fontSize
-		face = truetype.NewFace(d.Font, &opts)
-	} else {
-		face = basicfont.Face7x13
-	}
-	for _, x := range text {
-		awidth, ok := face.GlyphAdvance(rune(x))
-		if ok != true {
-			return
-		}
-		textWidth += int(float64(awidth) / 64)
-	}
-	return
-}
