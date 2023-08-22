@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
-	"image/jpeg"
+	"fmt"
+	"image/png"
+	"log"
 	"os"
 
 	"github.com/Iwark/text2img"
@@ -19,8 +21,8 @@ func main() {
 	flag.Parse()
 
 	d, err := text2img.NewDrawer(text2img.Params{
-		FontPath:            *fontPath,
-		BackgroundImagePath: *backgroundImagePath,
+		FontPath:  *fontPath,
+		BgImgPath: *bgImgPath,
 	})
 	if err != nil {
 		log.Println(err)
