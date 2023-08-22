@@ -3,3 +3,4 @@ test.jpg
 fonts/
 .DS_Store
 vendor/
+cmd/text2img/*.ttf
